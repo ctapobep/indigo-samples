@@ -1,13 +1,17 @@
 import com.epam.indigo.Indigo;
 import com.epam.indigo.IndigoObject;
+import com.epam.indigo.IndigoRenderer;
 import com.sun.org.apache.bcel.internal.util.ClassLoader;
 import org.junit.gen5.api.Test;
 import org.junit.gen5.junit4.runner.JUnit5;
 import org.junit.runner.RunWith;
 
+import static io.qala.datagen.RandomValue.length;
+import static io.qala.datagen.StringModifier.Impls.prefix;
+
 @RunWith(JUnit5.class)
 public class IndigoTest {
-    @Test void enumerateReaction() {
+    @Test IndigoObject enumerateReaction() {
         Indigo i = new Indigo();
         IndigoObject reaction = i.loadQueryReactionFromFile(simpleRxnFile());
 
@@ -26,6 +30,27 @@ public class IndigoTest {
         for(IndigoObject rxn : enumeration.iterateArray()) {
             System.out.println(rxn.rxnfile());
         }
+        return enumeration;
+    }
+
+    @Test void rendingReactionsAndReactantsAndProducts() {
+        IndigoObject enumeration = enumerateReaction();
+        Indigo indigo = enumeration.getIndigo();
+
+        IndigoRenderer renderer = new IndigoRenderer(indigo);
+        indigo.setOption("render-label-mode", "all");
+        indigo.setOption("render-output-format", "png");
+        indigo.setOption("render-bond-length", 25);
+        indigo.setOption("render-coloring", true);
+        indigo.setOption("render-margins", 0, 0);
+
+        for (IndigoObject rxn : enumeration.iterateArray()) {
+            for (IndigoObject reactant : rxn.iterateReactants())
+                renderer.renderToFile(reactant, randomPngFile("reactant"));
+            for (IndigoObject product : rxn.iterateProducts())
+                renderer.renderToFile(product, randomPngFile("product"));
+            renderer.renderToFile(rxn, randomPngFile("reaction"));
+        }
     }
 
     private String simpleRxnFile() {
@@ -35,5 +60,8 @@ public class IndigoTest {
     private String simpleMolFile() {
         //noinspection ConstantConditions
         return ClassLoader.getSystemClassLoader().getResource("simple-reaction/2-circles.mol").getFile();
+    }
+    private String randomPngFile(String prefix) {
+        return "target/" + length(prefix.length() + 20).with(prefix(prefix + "-")).alphanumeric() + ".png";
     }
 }
