@@ -2,6 +2,7 @@ import com.epam.indigo.Indigo;
 import com.epam.indigo.IndigoObject;
 import com.epam.indigo.IndigoRenderer;
 import com.sun.org.apache.bcel.internal.util.ClassLoader;
+import org.junit.gen5.api.Disabled;
 import org.junit.gen5.api.Test;
 import org.junit.gen5.junit4.runner.JUnit5;
 import org.junit.runner.RunWith;
@@ -53,6 +54,18 @@ public class IndigoTest {
         }
     }
 
+    @Disabled("Crashes JVM") void renderingReactionsIntoCdxml() {
+        Indigo i = new Indigo();
+        IndigoObject rxn = i.loadQueryReactionFromFile(simpleRxnFile());
+        IndigoRenderer renderer = new IndigoRenderer(i);
+        i.setOption("render-label-mode", "all");
+        i.setOption("render-output-format", "cdxml");
+        i.setOption("render-bond-length", 25);
+        i.setOption("render-coloring", true);
+        i.setOption("render-margins", 0, 0);
+        renderer.renderToFile(rxn, randomCdxmlFile("reaction"));
+    }
+
     private String simpleRxnFile() {
         //noinspection ConstantConditions
         return ClassLoader.getSystemClassLoader().getResource("simple-reaction/2-circles.rxn").getFile();
@@ -63,5 +76,9 @@ public class IndigoTest {
     }
     private String randomPngFile(String prefix) {
         return "target/" + length(prefix.length() + 20).with(prefix(prefix + "-")).alphanumeric() + ".png";
+    }
+
+    private String randomCdxmlFile(String prefix) {
+        return "target/" + length(prefix.length() + 20).with(prefix(prefix + "-")).alphanumeric() + ".xml";
     }
 }
